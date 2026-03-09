@@ -1,38 +1,47 @@
 import pytest
 import requests
+import allure
 import configuration
 import helpers
 import data
 
+
 @pytest.fixture(scope='function')
 def courier_data():
-    # создаем данные для нового курьера
-    data = helpers.register_new_courier_and_return_login_password()
+    with allure.step("Создать данные нового курьера"):
+        courier = helpers.register_new_courier_and_return_login_password()
 
-    # передаем данные в тест
-    yield data
+    yield courier
 
-    # получаем id курьера после выполнения теста
-    login_payload = {
-        "login": data["login"],
-        "password": data["password"]
-    }
-    login_response = requests.post(configuration.URL_SERVICE + configuration.LOGIN_COURIER_PATH, json=login_payload)
-    courier_id = login_response.json().get("id")
+    with allure.step("Подготовить payload для логина курьера"):
+        login_payload = {
+            "login": courier["login"],
+            "password": courier["password"]
+        }
 
-    # если id получен, удаляем курьера
+    with allure.step("Получить id курьера после выполнения теста"):
+        login_response = requests.post(
+            configuration.URL_SERVICE + configuration.LOGIN_COURIER_PATH,
+            json=login_payload
+        )
+        courier_id = login_response.json().get("id")
+
     if courier_id:
-        requests.delete(f"{configuration.URL_SERVICE}{configuration.CREATE_COURIER_PATH}/{courier_id}")
+        with allure.step("Удалить созданного курьера"):
+            requests.delete(
+                f"{configuration.URL_SERVICE}{configuration.CREATE_COURIER_PATH}/{courier_id}"
+            )
 
-# --- Добавлено для дополнительного задания ---
+
 @pytest.fixture(scope='function')
 def order_track():
-    # отправляем запрос на создание тестового заказа
-    response = requests.post(configuration.URL_SERVICE + configuration.CREATE_ORDER_PATH, json=data.order_body)
-    
-    # извлекаем номер трека из ответа
-    track_number = response.json().get("track")
-    
-    # передаем номер трека в тест
+    with allure.step("Создать тестовый заказ"):
+        response = requests.post(
+            configuration.URL_SERVICE + configuration.CREATE_ORDER_PATH,
+            json=data.order_body
+        )
+
+    with allure.step("Получить номер трека заказа"):
+        track_number = response.json().get("track")
+
     yield track_number
-    # (Очистка заказа не требуется, так как в API нет надежной ручки удаления/отмены заказа по треку)

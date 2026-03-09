@@ -9,3 +9,10 @@ order_body = {
     "comment": "Тестовый заказ",
     "color": []
 }
+
+INVALID_COURIER_ID = 999999999
+INVALID_ORDER_ID = 999999999
+
+MESSAGE_NOT_ENOUGH_DATA = "Недостаточно данных для поиска"
+MESSAGE_COURIER_NOT_FOUND = "Курьера с таким id не существует"
+MESSAGE_ORDER_NOT_FOUND = "Заказа с таким id не существует"
