@@ -1,8 +1,11 @@
+import allure
 import pytest
 import requests
-import allure
+
 import configuration
+import data
 import helpers
+
 
 class TestCourierCreation:
 
@@ -10,60 +13,66 @@ class TestCourierCreation:
     @allure.description("Проверяем, что при передаче всех обязательных полей курьер создается")
     def test_courier_creation_success(self):
         # готовим данные
-        login = helpers.generate_random_string(10)
-        password = helpers.generate_random_string(10)
-        first_name = helpers.generate_random_string(10)
-        payload = {
-            "login": login,
-            "password": password,
-            "firstName": first_name
-        }
+        with allure.step("Подготовить данные для создания курьера"):
+            payload = {
+                "login": helpers.generate_random_string(10),
+                "password": helpers.generate_random_string(10),
+                "firstName": helpers.generate_random_string(10)
+            }
 
-        # отправляем запрос на создание
-        response = requests.post(configuration.URL_SERVICE + configuration.CREATE_COURIER_PATH, json=payload)
+        with allure.step("Отправить запрос на создание курьера"):
+            response = requests.post(
+                configuration.URL_SERVICE + configuration.CREATE_COURIER_PATH,
+                json=payload
+            )
 
-        # проверяем успешный статус код 201
         assert response.status_code == 201
-        # проверяем, что в теле ответа ok: true
         assert response.json() == {"ok": True}
 
     @allure.title("Создание курьера с дублирующимся логином")
     @allure.description("Проверяем ошибку при попытке создать двух одинаковых курьеров")
     def test_cannot_create_two_identical_couriers(self):
-        # готовим данные
-        payload = {
-            "login": helpers.generate_random_string(10),
-            "password": helpers.generate_random_string(10),
-            "firstName": helpers.generate_random_string(10)
-        }
+        with allure.step("Подготовить данные для создания курьера"):
+            payload = {
+                "login": helpers.generate_random_string(10),
+                "password": helpers.generate_random_string(10),
+                "firstName": helpers.generate_random_string(10)
+            }
 
-        # создаем первого курьера
-        requests.post(configuration.URL_SERVICE + configuration.CREATE_COURIER_PATH, json=payload)
-        # пытаемся создать второго с такими же данными
-        response = requests.post(configuration.URL_SERVICE + configuration.CREATE_COURIER_PATH, json=payload)
+        with allure.step("Отправить первый запрос на создание курьера"):
+            requests.post(
+                configuration.URL_SERVICE + configuration.CREATE_COURIER_PATH,
+                json=payload
+            )
 
-        # проверяем код ошибки 409 (конфликт)
+        with allure.step("Отправить второй запрос на создание такого же курьера"):
+            response = requests.post(
+                configuration.URL_SERVICE + configuration.CREATE_COURIER_PATH,
+                json=payload
+            )
+
         assert response.status_code == 409
-        # проверяем текст ошибки
-        assert response.json()["message"] == "Этот логин уже используется. Попробуйте другой."
+        assert response.json()["message"] == data.MESSAGE_LOGIN_ALREADY_USED
 
     @allure.title("Создание курьера без обязательных полей")
     @allure.description("Параметризованный тест: проверяем ошибку при отсутствии логина или пароля")
     @pytest.mark.parametrize("missing_field", ["login", "password"])
     def test_courier_creation_missing_required_fields(self, missing_field):
-        # готовим полные данные
-        payload = {
-            "login": helpers.generate_random_string(10),
-            "password": helpers.generate_random_string(10),
-            "firstName": helpers.generate_random_string(10)
-        }
-        # удаляем одно поле в зависимости от параметра
-        del payload[missing_field]
+        with allure.step("Подготовить полные данные для создания курьера"):
+            payload = {
+                "login": helpers.generate_random_string(10),
+                "password": helpers.generate_random_string(10),
+                "firstName": helpers.generate_random_string(10)
+            }
 
-        # отправляем запрос
-        response = requests.post(configuration.URL_SERVICE + configuration.CREATE_COURIER_PATH, json=payload)
+        with allure.step("Удалить обязательное поле из payload"):
+            del payload[missing_field]
 
-        # проверяем код ошибки 400 (Bad Request)
+        with allure.step("Отправить запрос на создание курьера без обязательного поля"):
+            response = requests.post(
+                configuration.URL_SERVICE + configuration.CREATE_COURIER_PATH,
+                json=payload
+            )
+
         assert response.status_code == 400
-        # проверяем текст ошибки
-        assert response.json()["message"] == "Недостаточно данных для создания учетной записи"
+        assert response.json()["message"] == data.MESSAGE_NOT_ENOUGH_DATA_FOR_COURIER
