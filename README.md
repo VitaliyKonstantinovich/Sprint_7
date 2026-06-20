@@ -45,7 +45,7 @@
 ## Структура проекта
 
 ```text
-Sprint_7/
+qa-api-pytest-yandex-scooter/
 ├── configuration.py
 ├── data.py
 ├── helpers.py
@@ -67,8 +67,8 @@ Sprint_7/
 ### 1. Клонировать репозиторий
 
 ```bash
-git clone https://github.com/VitaliyKonstantinovich/Sprint_7.git
-cd Sprint_7
+git clone https://github.com/VitaliyKonstantinovich/qa-api-pytest-yandex-scooter.git
+cd qa-api-pytest-yandex-scooter
 ```
 
 ### 2. Создать виртуальное окружение
@@ -125,3 +125,4 @@ allure serve allure_results
 
 Vitaliy Glebov
 QA Engineer | Manual Testing | API | SQL | Python / Pytest
+
